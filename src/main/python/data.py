@@ -1,6 +1,11 @@
 import numpy as np
 
-cleaneval = np.load("data/cleaneval.npy", encoding='bytes')
+cleaneval = np.load("data/cleaneval.npy", encoding='bytes', allow_pickle=True)
+for el in cleaneval:
+    k = list(el.keys())
+    kb = [bytes(key, 'utf-8') for key in k]
+    for i,_ in enumerate(k):
+      el[kb[i]] = el[k[i]]
 
 web2text_test = cleaneval[
 np.array([309,87,534,705,362,192,247,538,311,29,494,202,210,636,183,238,628,64
