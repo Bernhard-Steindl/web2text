@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 from forward import EDGE_VARIABLES, UNARY_VARIABLES, edge, loss, unary
 from shuffle_queue import ShuffleQueue
+from data import web2text_test, web2text_train, web2text_validation, our_ce_train, our_ce_validation, our_ce_test, \
+  our_w2t_train, our_w2t_validation, our_w2t_test, our_new_train, our_new_validation, our_new_test
 from viterbi import viterbi
 
 BATCH_SIZE = 128
@@ -17,7 +19,7 @@ LEARNING_RATE = 1e-3
 DROPOUT_KEEP_PROB = 0.8
 REGULARIZATION_STRENGTH = 0.000
 EDGE_LAMBDA = 1
-CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'trained_model_cleaneval_split')
+CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'reproduce_model_our_new_split')
 
 def main():
   if len(sys.argv) < 2:
@@ -80,7 +82,9 @@ def evaluate_edge(dataset, prediction_fn):
 
 def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  training_queue = ShuffleQueue(cleaneval_train)
+  train = our_new_train
+  validation = our_new_validation
+  training_queue = ShuffleQueue(train)
 
   data_shape = [BATCH_SIZE, PATCH_SIZE, 1, N_FEATURES]
   labs_shape = [BATCH_SIZE, PATCH_SIZE, 1, 1]
@@ -121,8 +125,8 @@ def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
       )
 
       if step % 100 == 0:
-        _,_,_,f1_validation = evaluate_unary(cleaneval_validation, prediction)
-        _,_,_,f1_train = evaluate_unary(cleaneval_train, prediction)
+        _,_,_,f1_validation = evaluate_unary(validation, prediction)
+        _,_,_,f1_train = evaluate_unary(train, prediction)
         if f1_validation > BEST_VAL_SO_FAR:
           best = True
           saver.save(session, os.path.join(CHECKPOINT_DIR, 'unary.ckpt'))
@@ -136,7 +140,9 @@ def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
 
 def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  training_queue = ShuffleQueue(cleaneval_train)
+  train = our_new_train
+  validation = our_new_validation
+  training_queue = ShuffleQueue(train)
 
   data_shape = [BATCH_SIZE, PATCH_SIZE-1, 1, N_EDGE_FEATURES]
   labs_shape = [BATCH_SIZE, PATCH_SIZE-1, 1, 1]
@@ -178,8 +184,8 @@ def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
 
 
       if step % 100 == 0:
-        accuracy_validation = evaluate_edge(cleaneval_validation, prediction)
-        accuracy_train = evaluate_edge(cleaneval_train, prediction)
+        accuracy_validation = evaluate_edge(validation, prediction)
+        accuracy_train = evaluate_edge(train, prediction)
         if accuracy_validation > BEST_VAL_SO_FAR:
           best = True
           saver.save(session, os.path.join(CHECKPOINT_DIR, 'edge.ckpt'))
@@ -193,6 +199,9 @@ def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
 
 def test_structured(lamb=EDGE_LAMBDA):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
+
+  test = our_new_test
+
   unary_features = tf.placeholder(tf.float32)
   edge_features  = tf.placeholder(tf.float32)
 
@@ -231,11 +240,11 @@ def test_structured(lamb=EDGE_LAMBDA):
       logits = session.run(unary_logits, feed_dict={unary_features: features})
       return np.argmax(logits, axis=-1).flatten()
 
-    accuracy, precision, recall, f1 = evaluate_unary(cleaneval_test, prediction_structured)
-    accuracy_u, precision_u, recall_u, f1_u = evaluate_unary(cleaneval_test, prediction_unary)
+    accuracy, precision, recall, f1 = evaluate_unary(test, prediction_structured)
+    accuracy_u, precision_u, recall_u, f1_u = evaluate_unary(test, prediction_unary)
     end = time()
     print('duration', end-start)
-    print('size', len(cleaneval_test))
+    print('size', len(test))
     print("Structured: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy, precision, recall, f1))
     print("Just unary: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy_u, precision_u, recall_u, f1_u))
 
