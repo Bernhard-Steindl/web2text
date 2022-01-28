@@ -9,6 +9,8 @@ from shuffle_queue import ShuffleQueue
 from data import web2text_test, web2text_train, web2text_validation, our_ce_train, our_ce_validation, our_ce_test, \
   our_w2t_train, our_w2t_validation, our_w2t_test, our_new_train, our_new_validation, our_new_test
 from viterbi import viterbi
+import pandas as pd
+from data import cleaneval
 
 BATCH_SIZE = 128
 PATCH_SIZE = 9
@@ -19,12 +21,35 @@ LEARNING_RATE = 1e-3
 DROPOUT_KEEP_PROB = 0.8
 REGULARIZATION_STRENGTH = 0.000
 EDGE_LAMBDA = 1
-CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'reproduce_model_our_new_split')
+CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'reproduce_model_web2text_split')
+
+RANDOM_SPLITS = True
+
+custom_train = None
+custom_test = None
+custom_val = None
+          
+
 
 def main():
   if len(sys.argv) < 2:
     print("USAGE: python main.py [command]")
     sys.exit()
+
+  global custom_train
+  global custom_test
+  global custom_val
+
+  if sys.argv[2] == "custom":
+    train_ids =  np.load("train_ids.npy", encoding='bytes', allow_pickle=True)
+    val_ids =  np.load("val_ids.npy", encoding='bytes', allow_pickle=True)
+    test_ids =  np.load("test_ids.npy", encoding='bytes', allow_pickle=True)
+
+    custom_train = cleaneval[train_ids]
+    custom_val = cleaneval[val_ids]
+    custom_test = cleaneval[test_ids]
+
+
   if sys.argv[1] == 'train_unary':
     # Train the block classification network
     train_unary()
@@ -82,8 +107,18 @@ def evaluate_edge(dataset, prediction_fn):
 
 def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  train = our_new_train
-  validation = our_new_validation
+  train = cleaneval_train
+  validation = cleaneval_validation
+
+  global custom_train
+  global custom_val
+
+  if custom_train is not None:
+    train = custom_train
+
+  if custom_val is not None:
+    validation = custom_val
+
   training_queue = ShuffleQueue(train)
 
   data_shape = [BATCH_SIZE, PATCH_SIZE, 1, N_FEATURES]
@@ -140,8 +175,18 @@ def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
 
 def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  train = our_new_train
-  validation = our_new_validation
+  train = cleaneval_train
+  validation = cleaneval_validation
+
+  global custom_train
+  global custom_val
+
+  if custom_train is not None:
+    train = custom_train
+
+  if custom_val is not None:
+    validation = custom_val
+
   training_queue = ShuffleQueue(train)
 
   data_shape = [BATCH_SIZE, PATCH_SIZE-1, 1, N_EDGE_FEATURES]
@@ -200,7 +245,14 @@ def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
 def test_structured(lamb=EDGE_LAMBDA):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
 
-  test = our_new_test
+  global custom_test
+
+  test = cleaneval_test
+
+  if custom_test is not None:
+    test = custom_test
+
+
 
   unary_features = tf.placeholder(tf.float32)
   edge_features  = tf.placeholder(tf.float32)
@@ -247,6 +299,7 @@ def test_structured(lamb=EDGE_LAMBDA):
     print('size', len(test))
     print("Structured: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy, precision, recall, f1))
     print("Just unary: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy_u, precision_u, recall_u, f1_u))
+    pd.DataFrame([[accuracy, precision, recall, f1, accuracy_u, precision_u, recall_u, f1_u]], columns=["accuracy", "precision", "recall", "f1", "accuracy_u", "precision_u", "recall_u", "f1_u"]).to_csv(f"cleaneval.csv",mode='a', header=False)
 
 
 def classify(block_features_file, edge_features_file, labels_output_file, lamb=EDGE_LAMBDA):
