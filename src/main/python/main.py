@@ -40,10 +40,11 @@ def main():
   global custom_test
   global custom_val
 
-  if sys.argv[2] == "custom":
-    train_ids =  np.load("train_ids.npy", encoding='bytes', allow_pickle=True)
-    val_ids =  np.load("val_ids.npy", encoding='bytes', allow_pickle=True)
-    test_ids =  np.load("test_ids.npy", encoding='bytes', allow_pickle=True)
+  if len(sys.argv)  > 2:
+    if sys.argv[2] == "custom":
+      train_ids =  np.load("train_ids.npy", encoding='bytes', allow_pickle=True)
+      val_ids =  np.load("val_ids.npy", encoding='bytes', allow_pickle=True)
+      test_ids =  np.load("test_ids.npy", encoding='bytes', allow_pickle=True)
 
     custom_train = cleaneval[train_ids]
     custom_val = cleaneval[val_ids]
@@ -299,7 +300,7 @@ def test_structured(lamb=EDGE_LAMBDA):
     print('size', len(test))
     print("Structured: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy, precision, recall, f1))
     print("Just unary: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy_u, precision_u, recall_u, f1_u))
-    pd.DataFrame([[accuracy, precision, recall, f1, accuracy_u, precision_u, recall_u, f1_u]], columns=["accuracy", "precision", "recall", "f1", "accuracy_u", "precision_u", "recall_u", "f1_u"]).to_csv(f"cleaneval.csv",mode='a', header=False)
+    pd.DataFrame([[accuracy, precision, recall, f1, accuracy_u, precision_u, recall_u, f1_u]], columns=["accuracy", "precision", "recall", "f1", "accuracy_u", "precision_u", "recall_u", "f1_u"]).to_csv(f"random.csv",mode='a', header=False)
 
 
 def classify(block_features_file, edge_features_file, labels_output_file, lamb=EDGE_LAMBDA):

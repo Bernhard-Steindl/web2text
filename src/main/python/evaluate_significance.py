@@ -4,7 +4,7 @@ import os
 import numpy as np
 from data import cleaneval
 
-def gen_train_test_val_split(train_size=0.7, val_size=0.1):
+def gen_train_test_val_split(train_size=0.7, val_size=0.1, use_their_split_size=False):
   all_ids =  np.array([164, 648, 168, 505, 495, 563, 288, 321, 295, 242, 702, 332, 585, 712, 139, 520, 686, 204,
    545, 181, 344, 147, 359, 513, 498, 101, 339, 499, 329, 0, 493, 726, 518, 549, 11, 386
                  , 294, 6, 372, 18, 328, 369, 727, 13, 292, 556, 244, 488, 76, 403, 379, 206, 407, 610, 188, 112, 193,
@@ -50,6 +50,10 @@ def gen_train_test_val_split(train_size=0.7, val_size=0.1):
   np.random.shuffle(all_ids)
   train_size = int(len(all_ids)*train_size)
   val_size = int(len(all_ids)*val_size)
+  if use_their_split_size:
+    # use the split sizes of their paper
+    train_size=531
+    val_size=58
   train_ids = all_ids[:train_size]
   val_ids = all_ids[train_size:train_size+val_size]
   test_ids = all_ids[train_size+val_size:]
@@ -59,7 +63,7 @@ def gen_train_test_val_split(train_size=0.7, val_size=0.1):
 
 def run_random_split():
   for i in range(20):
-    gen_train_test_val_split()
+    gen_train_test_val_split(use_their_split_size=True)
     os.system("python3 main.py train_unary custom")
     os.system("python3 main.py train_edge custom")
     os.system("python3 main.py test_structured custom")
@@ -73,6 +77,8 @@ def run_random_split():
 
 
 if __name__ == "__main__":
+  run_random_split()
+  raise Exception("Done")
 
   for i in range(20):
     os.system("python3 main.py train_unary")
