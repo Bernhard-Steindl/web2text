@@ -95,3 +95,5 @@ cleaneval_test = np.array([61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 7
               729, 730, 731, 732, 733, 734, 735, 736])
 
 print(sorted(np.concatenate((web2text_test, web2text_train, web2text_validation))) == sorted(np.concatenate((cleaneval_test, cleaneval_train, cleaneval_validation))))
+print(len(np.concatenate((web2text_test, web2text_train, web2text_validation))))
+print(len(np.concatenate((cleaneval_test, cleaneval_train, cleaneval_validation))))
