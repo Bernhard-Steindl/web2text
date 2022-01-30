@@ -1,3 +1,0 @@
-future
-tensorflow
-numpy
