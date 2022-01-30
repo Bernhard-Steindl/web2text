@@ -19,8 +19,8 @@ N_EDGE_FEATURES = 25
 TRAIN_STEPS = 5000
 LEARNING_RATE = 1e-3
 DROPOUT_KEEP_PROB = 0.8
-REGULARIZATION_STRENGTH = 0.000
-EDGE_LAMBDA = 1
+REGULARIZATION_STRENGTH = 0.0001
+EDGE_LAMBDA = 0.1
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'reproduce_model_web2text_split')
 
 RANDOM_SPLITS = True
@@ -108,8 +108,8 @@ def evaluate_edge(dataset, prediction_fn):
 
 def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  train = cleaneval_train
-  validation = cleaneval_validation
+  train = web2text_train
+  validation = web2text_validation
 
   global custom_train
   global custom_val
@@ -176,8 +176,8 @@ def train_unary(conv_weight_decay = REGULARIZATION_STRENGTH):
 
 def train_edge(conv_weight_decay = REGULARIZATION_STRENGTH):
   from data import cleaneval_test, cleaneval_train, cleaneval_validation
-  train = cleaneval_train
-  validation = cleaneval_validation
+  train = web2text_train
+  validation = web2text_validation
 
   global custom_train
   global custom_val
@@ -248,7 +248,7 @@ def test_structured(lamb=EDGE_LAMBDA):
 
   global custom_test
 
-  test = cleaneval_test
+  test = web2text_test
 
   if custom_test is not None:
     test = custom_test
@@ -300,7 +300,7 @@ def test_structured(lamb=EDGE_LAMBDA):
     print('size', len(test))
     print("Structured: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy, precision, recall, f1))
     print("Just unary: Accuracy=%.5f, precision=%.5f, recall=%.5f, F1=%.5f" % (accuracy_u, precision_u, recall_u, f1_u))
-    pd.DataFrame([[accuracy, precision, recall, f1, accuracy_u, precision_u, recall_u, f1_u]], columns=["accuracy", "precision", "recall", "f1", "accuracy_u", "precision_u", "recall_u", "f1_u"]).to_csv(f"random.csv",mode='a', header=False)
+    pd.DataFrame([[accuracy, precision, recall, f1, accuracy_u, precision_u, recall_u, f1_u]], columns=["accuracy", "precision", "recall", "f1", "accuracy_u", "precision_u", "recall_u", "f1_u"]).to_csv(f"web2text_decay_lambda.csv",mode='a', header=False)
 
 
 def classify(block_features_file, edge_features_file, labels_output_file, lamb=EDGE_LAMBDA):
